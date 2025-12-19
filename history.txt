@@ -1,10 +1,3 @@
-# connect-go-example
-
-### sample introduction to Connect RPC
-Based on the ["Getting started from Connect Docs"](https://connectrpc.com/docs/go/getting-started/)
-
-First clone this repo and install all needed tools like [buf](https://github.com/bufbuild/buf)
-```bash
 git clone git@github.com:lao-tseu-is-alive/connect-go-example.git
 cd connect-go-example/
 go mod init github.com/lao-tseu-is-alive/connect-go-example
@@ -13,5 +6,19 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
 which buf protoc-gen-go protoc-gen-connect-go
 mkdir -p greet/v1
-```
+touch greet/v1/greet.proto
+vim greet/v1/greet.proto
+buf config init
+vim buf.yaml 
+vim buf.gen.yaml
+buf dep update
+buf lint
+buf generate
+cat gen/greet/v1/greet.pb.go 
+ mkdir -p cmd/server
+ vim cmd/server/main.go
+go get connectrpc.com/connect
+go get connectrpc.com/validate
+go get buf.build/go/protovalidate
+go run ./cmd/server/main.go
 
