@@ -40,7 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("💥💥 error getting log writer: %v'\n", err)
 	}
-	logLevel, err := config.GetLogLevel(golog.InfoLevel)
+	logLevel, err := config.GetLogLevel(golog.ErrorLevel)
 	if err != nil {
 		log.Fatalf("💥💥 error getting log level: %v'\n", err)
 	}
