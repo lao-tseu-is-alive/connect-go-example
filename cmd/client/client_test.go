@@ -198,3 +198,61 @@ func BenchmarkGreet_GRPC_Parallel(b *testing.B) {
 		}
 	})
 }
+
+// --- JSON Benchmarks ---
+
+// BenchmarkGreet_JSON benchmarks Connect with JSON encoding (sequential)
+func BenchmarkGreet_JSON(b *testing.B) {
+	mux := http.NewServeMux()
+	path, handler := greetv1connect.NewGreetServiceHandler(&MockGreetServer{})
+	mux.Handle(path, handler)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	client := greetv1connect.NewGreetServiceClient(
+		http.DefaultClient,
+		server.URL,
+		connect.WithProtoJSON(), // Use JSON encoding
+	)
+
+	req := &greetv1.GreetRequest{Name: "BenchUser"}
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		_, err := client.Greet(context.Background(), req)
+		if err != nil {
+			b.Fatalf("Greet failed: %v", err)
+		}
+	}
+}
+
+// BenchmarkGreet_JSON_Parallel benchmarks Connect with JSON encoding (parallel)
+func BenchmarkGreet_JSON_Parallel(b *testing.B) {
+	mux := http.NewServeMux()
+	path, handler := greetv1connect.NewGreetServiceHandler(&MockGreetServer{})
+	mux.Handle(path, handler)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	client := greetv1connect.NewGreetServiceClient(
+		http.DefaultClient,
+		server.URL,
+		connect.WithProtoJSON(),
+	)
+
+	req := &greetv1.GreetRequest{Name: "BenchUser"}
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := client.Greet(context.Background(), req)
+			if err != nil {
+				b.Errorf("Greet failed: %v", err)
+			}
+		}
+	})
+}
