@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -16,22 +17,39 @@ import (
 )
 
 const (
-	APP            = "greetServer"
-	VERSION        = "0.0.2"
-	defaultIp      = "127.0.0.1"
-	defaultPort    = 8080
-	defaultLogName = "stderr"
+	APP             = "greetServer"
+	VERSION         = "0.0.2"
+	AppVersion      = APP + " v" + VERSION
+	defaultIp       = "127.0.0.1"
+	defaultPort     = 8080
+	defaultLogName  = "stderr"
+	myHeaderKey     = "Acme-Tenant-Id"
+	serverHeaderKey = "App-Version"
 )
 
 type GreetServer struct {
-	Logger *slog.Logger
+	Logger          *slog.Logger
+	ClientHeaderKey string
 }
 
 func (s *GreetServer) Greet(ctx context.Context, req *greetv1.GreetRequest) (*greetv1.GreetResponse, error) {
 	s.Logger.Info("entering Greet", "context", ctx, "request", req)
+	if err := ctx.Err(); err != nil {
+		return nil, err // automatically coded correctly
+	}
+	// let's retrieve client headers if any
+	callInfo, ok := connect.CallInfoForHandlerContext(ctx)
+	if !ok {
+		return nil, errors.New("can't access headers: no CallInfo for handler context")
+	}
+	headerVal := callInfo.RequestHeader().Get(s.ClientHeaderKey)
+	s.Logger.Info("retrieving special header", "headerKey", s.ClientHeaderKey, "headerValue", headerVal)
+
 	res := &greetv1.GreetResponse{
 		Greeting: fmt.Sprintf("Hello, %s!", req.Name),
 	}
+	//let's send back a server header
+	callInfo.ResponseHeader().Set(serverHeaderKey, AppVersion)
 	return res, nil
 }
 
@@ -40,14 +58,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("💥💥 error getting log writer: %v'\n", err)
 	}
-	logLevel, err := config.GetLogLevel(golog.ErrorLevel)
+	logLevel, err := config.GetLogLevel(golog.InfoLevel)
 	if err != nil {
 		log.Fatalf("💥💥 error getting log level: %v'\n", err)
 	}
 	l := golog.NewLogger("simple", logWriter, logLevel, APP)
 	l.Info("🚀 Starting", "app", APP, "version", VERSION)
 
-	greeter := &GreetServer{l}
+	greeter := &GreetServer{Logger: l, ClientHeaderKey: myHeaderKey}
 	mux := http.NewServeMux()
 	path, handler := greetv1connect.NewGreetServiceHandler(
 		greeter,

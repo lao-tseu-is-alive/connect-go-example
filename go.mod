@@ -6,6 +6,7 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.10-20251209175733-2a1774d88802.1
 	connectrpc.com/connect v1.19.1
 	connectrpc.com/validate v0.6.0
+	github.com/google/uuid v1.6.0
 	github.com/lao-tseu-is-alive/go-cloud-k8s-common-libs v0.6.3
 	google.golang.org/protobuf v1.36.10
 )
