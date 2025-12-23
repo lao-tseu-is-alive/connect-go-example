@@ -169,13 +169,10 @@ Visit the web UI at `http://localhost:5173`.
 
 ## 📜 License
 
-MIT
+MIT License — See [LICENSE](./LICENSE) for details.
 
-```
+---
 
-### Next Steps for You:
-1.  **Replace your existing `README.md`** with the content above.
-2.  **Verify your `go.mod`**: Since the README mentions Go 1.23+, ensure your `go.mod` matches a supported version (e.g., `go 1.23` or `1.24`) so users don't get warnings.
-3.  **Commit**: Don't forget to commit the changes to `buf.gen.yaml`, `package.json`, and the new `web/` folder structure alongside this README!
+  Built with ❤️ using [Go](https://go.dev/), [Proto](https://protobuf.dev/), and [Connect](https://connectrpc.com/)
 
-```
+
