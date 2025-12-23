@@ -3,6 +3,13 @@
 # Demonstrates REST and RPC endpoints
 
 set -e
+echo "========================================"
+echo "Testing Connect Endpoints via Curl "
+echo "========================================"
+echo ""
+echo "0. the classical curl sample as explained in : https://connectrpc.com/docs/go/getting-started"
+echo "   curl -s -H 'Content-Type: application/json' -d '{\"name\": \"Carlitos\"}' http://localhost:8080/greet.v1.GreetService/Greet"
+curl -s -H "Content-Type: application/json" -d '{"name": "Carlitos"}' http://localhost:8080/greet.v1.GreetService/Greet |jq
 
 echo "========================================"
 echo "Testing REST Endpoints (for OpenAPI clients)"
@@ -11,13 +18,13 @@ echo "========================================"
 echo ""
 echo "1. GET /v1/greet/{name} - REST with path parameter"
 echo "   curl http://localhost:8080/v1/greet/Alice"
-curl -s http://localhost:8080/v1/greet/Alice
+curl -s http://localhost:8080/v1/greet/Alice |jq
 echo ""
 
 echo ""
 echo "2. POST /v1/greet - REST with JSON body"
 echo "   curl -X POST -H 'Content-Type: application/json' -d '{\"name\":\"Bob\"}' http://localhost:8080/v1/greet"
-curl -s -X POST --header "Content-Type: application/json" --data '{"name": "Bob"}' http://localhost:8080/v1/greet
+curl -s -X POST --header "Content-Type: application/json" --data '{"name": "Bob"}' http://localhost:8080/v1/greet |jq
 echo ""
 
 echo ""

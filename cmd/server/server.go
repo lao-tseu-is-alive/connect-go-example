@@ -19,7 +19,7 @@ import (
 
 const (
 	APP             = "greetServer"
-	VERSION         = "0.0.3"
+	VERSION         = "0.0.4"
 	AppVersion      = APP + " v" + VERSION
 	defaultIp       = "127.0.0.1"
 	defaultPort     = 8080
@@ -83,6 +83,17 @@ func main() {
 		log.Fatalf("💥💥 error creating vanguard transcoder: %v'\n", err)
 	}
 
+	// 3. Use a Mux to route traffic
+	mux := http.NewServeMux()
+	// Explicitly mount the Connect handler for RPC traffic (bypasses Vanguard)
+	//  Any request starting with /greet.v1.GreetService/ is routed directly to the generated Connect handler.
+	// This handler accepts simple JSON requests like:
+	// curl -s -H "Content-Type: application/json" -d '{"name": "Carlitos"}' http://localhost:8080/greet.v1.GreetService/Greet |jq
+	// without requiring extra headers for Connect protocol -H "Connect-Protocol-Version: 1"
+	mux.Handle(path, handler)
+	// Mount Vanguard for everything else (REST transcoding)
+	mux.Handle("/", transcoder)
+
 	p := new(http.Protocols)
 	p.SetHTTP1(true)
 	// Use h2c so we can serve HTTP/2 without TLS.
@@ -92,8 +103,9 @@ func main() {
 	l.Info("REST endpoints available:", "GET", "/v1/greet/{name}", "POST", "/v1/greet")
 	l.Info("Connect endpoints available:", "POST", "/greet.v1.GreetService/Greet")
 	s := http.Server{
-		Addr:      serverAddress,
-		Handler:   transcoder, // Use transcoder instead of mux
+		Addr: serverAddress,
+		//Handler:   transcoder, // Use transcoder instead of mux to block classic connect url
+		Handler:   mux, // <--- Use mux instead of transcoder to allow POST /greet.v1.GreetService/Greet
 		Protocols: p,
 	}
 	s.ListenAndServe()
