@@ -19,14 +19,15 @@ import (
 )
 
 const (
-	APP             = "greetClient"
-	VERSION         = "0.0.3"
-	defaultName     = "connectRPC"
-	defaultIp       = "127.0.0.1"
-	defaultPort     = 8080
-	defaultLogName  = "stderr"
-	myHeaderKey     = "Acme-Tenant-Id"
-	serverHeaderKey = "App-Version"
+	APP                   = "greetClient"
+	VERSION               = "0.0.3"
+	defaultName           = "connectRPC"
+	defaultIp             = "127.0.0.1"
+	defaultPort           = 8080
+	defaultLogName        = "stderr"
+	myHeaderKey           = "Acme-Tenant-Id"
+	serverHeaderKey       = "App-Version"
+	defaultConnectTimeout = 10 * time.Second
 )
 
 func main() {
@@ -71,8 +72,21 @@ func main() {
 		l.Error("received invalid mode. use 'connect', 'grpc', or 'json'", "mode", *mode)
 	}
 
+	// For gRPC, we need HTTP/2 support. The default client only supports HTTP/1.1,
+	// so we create an h2c (HTTP/2 cleartext) client for gRPC mode.
+	httpClient := http.DefaultClient
+	if *mode == "grpc" {
+		// Create a transport that uses HTTP/2 prior knowledge (h2c)
+		transport := &http.Transport{}
+		// Enable unencrypted HTTP/2
+		protocols := new(http.Protocols)
+		protocols.SetUnencryptedHTTP2(true)
+		transport.Protocols = protocols
+		httpClient = &http.Client{Transport: transport}
+	}
+
 	client := greetv1connect.NewGreetServiceClient(
-		http.DefaultClient,
+		httpClient,
 		reqUrl,
 		opts...,
 	)
@@ -80,10 +94,11 @@ func main() {
 	if *bench {
 		runBenchmark(client, *numMsgs, nameToGreet, l)
 	} else {
+		rpcConnCtx, rpcConnCancel := context.WithTimeout(context.Background(), defaultConnectTimeout)
+		defer rpcConnCancel()
 		// let's add some header for the server
 		id := uuid.NewString()
-		ctx, callInfo := connect.NewClientContext(context.Background())
-
+		ctx, callInfo := connect.NewClientContext(rpcConnCtx)
 		callInfo.RequestHeader().Set(myHeaderKey, id)
 		res, err := client.Greet(
 			ctx,

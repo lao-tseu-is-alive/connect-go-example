@@ -8,6 +8,10 @@ plugins:
     opt:
       - paths=source_relative
       - simple
+  - remote: buf.build/community/google-gnostic-openapi
+    out: gen/openapi
+    opt:
+      - paths=source_relative
 managed:
   enabled: true
   override:
@@ -16,3 +20,6 @@ managed:
   disable:
     - file_option: go_package
       module: buf.build/bufbuild/protovalidate
+    - file_option: go_package
+      module: buf.build/googleapis/googleapis
+
